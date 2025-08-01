@@ -530,12 +530,34 @@
             document.body.appendChild(measuringDiv);
 
             elements.forEach((element, index) => {
-                // Track chapter starts
-                if (element.tagName === 'H1' || element.tagName === 'H2' || element.tagName === 'H3') {
+                // Track chapter starts and ensure they begin on even pages (right side)
+                if (element.tagName === 'H1' || element.tagName === 'H2') {
+                    const chapterTitle = element.textContent;
+                    if (!chapterStartPages[chapterTitle]) {
+                        // If we have content on the current page, save it first
+                        if (currentPageElements.length > 0) {
+                            pages.push(createPageHTML(currentPageElements));
+                            currentPageElements = [];
+                            currentHeight = 0;
+                        }
+                        
+                        // Ensure chapter starts on an even page (right side of open book)
+                        // Even pages are: 2, 4, 6, 8, etc (index 1, 3, 5, 7...)
+                        while (pages.length % 2 !== 1) {
+                            // Add blank page to reach odd index (even page number)
+                            pages.push('<div style="text-align: center; margin-top: 40%; color: #8b6f47; font-style: italic;">~ This page intentionally left blank ~</div>');
+                        }
+                        
+                        chapterStartPages[chapterTitle] = pages.length;
+                        currentChapter = chapterTitle;
+                    }
+                }
+                
+                // Track H3 sections but don't force page breaks
+                if (element.tagName === 'H3') {
                     const chapterTitle = element.textContent;
                     if (!chapterStartPages[chapterTitle]) {
                         chapterStartPages[chapterTitle] = pages.length;
-                        currentChapter = chapterTitle;
                     }
                 }
 
