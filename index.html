@@ -530,11 +530,11 @@
             document.body.appendChild(measuringDiv);
 
             elements.forEach((element, index) => {
-                // Track chapter starts and ensure they begin on even pages (right side)
+                // Track chapter starts and ensure they begin at top of even pages (right side)
                 if (element.tagName === 'H1' || element.tagName === 'H2') {
                     const chapterTitle = element.textContent;
                     if (!chapterStartPages[chapterTitle]) {
-                        // If we have content on the current page, save it first
+                        // Always start a new page for chapters
                         if (currentPageElements.length > 0) {
                             pages.push(createPageHTML(currentPageElements));
                             currentPageElements = [];
@@ -550,6 +550,13 @@
                         
                         chapterStartPages[chapterTitle] = pages.length;
                         currentChapter = chapterTitle;
+                        
+                        // Add the chapter header as the first element of the new page
+                        currentPageElements.push(element.cloneNode(true));
+                        measuringDiv.innerHTML = '';
+                        measuringDiv.appendChild(element.cloneNode(true));
+                        currentHeight = measuringDiv.offsetHeight;
+                        return; // Skip the normal processing for this element
                     }
                 }
                 
@@ -715,7 +722,7 @@
             if (direction === 'next') {
                 rightPage.classList.add('page-flip-left');
                 setTimeout(() => {
-                    currentPage += 2;
+                    currentPage += 1;
                     if (currentPage > pages.length) currentPage = pages.length;
                     displayPages();
                     rightPage.classList.remove('page-flip-left');
@@ -723,7 +730,7 @@
                 }, 400);
             } else {
                 // For previous page, we need to update content first, then animate
-                currentPage -= 2;
+                currentPage -= 1;
                 if (currentPage < 1) currentPage = 1;
                 displayPages();
                 
@@ -762,7 +769,7 @@
             let page = parseInt(input.value);
             
             if (page >= 1 && page <= pages.length) {
-                currentPage = page % 2 === 0 ? page : page;
+                currentPage = page;
                 displayPages();
             } else {
                 input.value = currentPage;
@@ -781,7 +788,6 @@
                 a.onclick = (e) => {
                     e.preventDefault();
                     currentPage = pageIndex + 1;
-                    if (currentPage % 2 === 0) currentPage--;
                     displayPages();
                     hideTOC();
                 };
