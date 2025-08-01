@@ -515,6 +515,7 @@
             let currentPageElements = [];
             let currentHeight = 0;
             let currentChapter = null;
+            let processedHeaders = new Set(); // Track processed headers to prevent duplicates
 
             // Create a hidden measuring div
             const measuringDiv = document.createElement('div');
@@ -530,11 +531,16 @@
             document.body.appendChild(measuringDiv);
 
             elements.forEach((element, index) => {
+                // Create unique identifier for each header element
+                const headerKey = `${element.tagName}-${index}-${element.textContent}`;
+                
                 // Handle different header levels with appropriate page breaks
                 if (element.tagName === 'H1') {
                     // H1 = Book title - always starts on its own page (first page or new page)
                     const chapterTitle = element.textContent;
-                    if (!chapterStartPages[chapterTitle]) {
+                    if (!processedHeaders.has(headerKey)) {
+                        processedHeaders.add(headerKey);
+                        
                         if (currentPageElements.length > 0) {
                             pages.push(createPageHTML(currentPageElements));
                             currentPageElements = [];
@@ -556,7 +562,9 @@
                 if (element.tagName === 'H2') {
                     // H2 = Parts - start on new even pages (right side)
                     const chapterTitle = element.textContent;
-                    if (!chapterStartPages[chapterTitle]) {
+                    if (!processedHeaders.has(headerKey)) {
+                        processedHeaders.add(headerKey);
+                        
                         if (currentPageElements.length > 0) {
                             pages.push(createPageHTML(currentPageElements));
                             currentPageElements = [];
@@ -582,7 +590,9 @@
                 if (element.tagName === 'H3') {
                     // H3 = Chapters - start on new even pages (right side)
                     const chapterTitle = element.textContent;
-                    if (!chapterStartPages[chapterTitle]) {
+                    if (!processedHeaders.has(headerKey)) {
+                        processedHeaders.add(headerKey);
+                        
                         if (currentPageElements.length > 0) {
                             pages.push(createPageHTML(currentPageElements));
                             currentPageElements = [];
