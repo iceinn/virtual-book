@@ -588,7 +588,7 @@
                 }
                 
                 if (element.tagName === 'H3') {
-                    // H3 = Chapters - start on new even pages (right side)
+                    // H3 = Chapters - start on new pages (any page)
                     const chapterTitle = element.textContent;
                     if (!processedHeaders.has(headerKey)) {
                         processedHeaders.add(headerKey);
@@ -599,11 +599,7 @@
                             currentHeight = 0;
                         }
                         
-                        // Ensure chapters start on even pages (right side)
-                        while (pages.length % 2 !== 1) {
-                            pages.push('<div style="text-align: center; margin-top: 40%; color: #8b6f47; font-style: italic;">~ This page intentionally left blank ~</div>');
-                        }
-                        
+                        // Chapters start on any new page (no even page requirement)
                         chapterStartPages[chapterTitle] = pages.length;
                         currentChapter = chapterTitle;
                         
