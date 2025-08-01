@@ -415,10 +415,17 @@
 
         /* Chapter pages with content - title and content start at 50% */
         .chapter-start {
-            padding-top: 50%;
             position: relative;
             height: 100%;
             box-sizing: border-box;
+        }
+        
+        .chapter-start::before {
+            content: '';
+            display: block;
+            height: 50%;
+            /* Account for the page's top padding */
+            margin-top: -20px;
         }
 
         .chapter-start h3 {
