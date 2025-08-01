@@ -765,7 +765,7 @@
             if (direction === 'next') {
                 rightPage.classList.add('page-flip-left');
                 setTimeout(() => {
-                    currentPage += 1;
+                    currentPage += 2;
                     if (currentPage > pages.length) currentPage = pages.length;
                     displayPages();
                     rightPage.classList.remove('page-flip-left');
@@ -773,7 +773,7 @@
                 }, 400);
             } else {
                 // For previous page, we need to update content first, then animate
-                currentPage -= 1;
+                currentPage -= 2;
                 if (currentPage < 1) currentPage = 1;
                 displayPages();
                 
@@ -812,7 +812,8 @@
             let page = parseInt(input.value);
             
             if (page >= 1 && page <= pages.length) {
-                currentPage = page;
+                // Ensure we're on an odd page number for proper left/right pairing
+                currentPage = page % 2 === 0 ? page - 1 : page;
                 displayPages();
             } else {
                 input.value = currentPage;
@@ -830,7 +831,9 @@
                 a.textContent = chapter;
                 a.onclick = (e) => {
                     e.preventDefault();
-                    currentPage = pageIndex + 1;
+                    let targetPage = pageIndex + 1;
+                    // Ensure we're on an odd page number for proper left/right pairing
+                    currentPage = targetPage % 2 === 0 ? targetPage - 1 : targetPage;
                     displayPages();
                     hideTOC();
                 };
