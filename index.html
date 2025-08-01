@@ -341,14 +341,14 @@
         }
 
         h3 {
-            font-size: 24px;
+            font-size: 20px;
             margin-top: 4px;
             margin-bottom: 3px;
             color: #2c1810;
-            font-weight: bold;
-            text-align: center;
-            letter-spacing: 1px;
-            font-style: italic;
+            font-weight: normal;
+            text-align: left;
+            letter-spacing: 0.5px;
+            font-style: normal;
         }
 
         p {
@@ -372,42 +372,53 @@
         }
 
         /* Special styling for part and chapter title pages */
+        .part-page {
+            position: relative;
+            height: 100%;
+        }
+
         .part-page h2 {
             position: absolute;
-            top: 50%;
+            top: 33%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 100%;
-            font-size: 36px;
-            letter-spacing: 4px;
+            width: 80%;
+            font-size: 42px;
+            letter-spacing: 5px;
             text-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin: 0;
-            padding: 20px;
-            border-top: 2px solid #8b6f47;
-            border-bottom: 2px solid #8b6f47;
+            padding: 0;
+            border: none;
+        }
+
+        .chapter-page {
+            position: relative;
+            height: 100%;
         }
 
         .chapter-page h3 {
             position: absolute;
-            top: 45%;
+            top: 25%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 100%;
-            font-size: 28px;
+            width: 80%;
+            font-size: 36px;
             letter-spacing: 2px;
             text-shadow: 0 1px 3px rgba(0,0,0,0.1);
             margin: 0;
-            padding: 15px;
-            border-bottom: 1px solid #8b6f47;
+            padding: 0;
+            border: none;
+            font-style: normal;
+            font-weight: 300;
         }
 
-        .chapter-page h3::before {
-            content: "✦";
-            display: block;
-            font-size: 20px;
-            color: #8b6f47;
-            margin-bottom: 10px;
-            letter-spacing: 0;
+        /* Chapter content starts at 50% down the page */
+        .chapter-start {
+            padding-top: 50%;
+        }
+
+        .chapter-start p:first-of-type {
+            margin-top: 0;
         }
 
         /* Book spine effect */
@@ -769,6 +780,11 @@
                 } else if (element.tagName === 'H3') {
                     div.className = 'chapter-page';
                 }
+            }
+            
+            // Check if this page starts with a chapter header followed by content
+            if (elements.length > 1 && elements[0].tagName === 'H3') {
+                div.className = 'chapter-start';
             }
             
             elements.forEach(el => div.appendChild(el));
