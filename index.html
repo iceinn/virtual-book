@@ -414,21 +414,21 @@
         }
 
         /* Chapter pages with content - title and content start at 50% */
-        .chapter-start {
+        .page-content.chapter-start {
             position: relative;
             height: 100%;
             box-sizing: border-box;
         }
         
-        .chapter-start::before {
+        .page-content.chapter-start::before {
             content: '';
             display: block;
             height: 50%;
             /* Account for the page's top padding */
-            margin-top: -20px;
+            margin-top: -30px;
         }
 
-        .chapter-start h3 {
+        .page-content.chapter-start h3 {
             font-size: 36px;
             text-align: center;
             margin-bottom: 40px;
@@ -437,7 +437,7 @@
             letter-spacing: 2px;
         }
 
-        .chapter-start p:first-of-type {
+        .page-content.chapter-start p:first-of-type {
             margin-top: 0;
         }
 
@@ -830,17 +830,33 @@
             if (leftIndex >= 0 && leftIndex < pages.length) {
                 leftPage.innerHTML = pages[leftIndex];
                 leftPageNum.textContent = leftIndex + 1;
+                
+                // Check if this page has chapter-start class and apply it to the page content
+                if (pages[leftIndex].includes('class="chapter-start"')) {
+                    leftPage.className = 'page-content chapter-start';
+                } else {
+                    leftPage.className = 'page-content';
+                }
             } else {
                 leftPage.innerHTML = '';
                 leftPageNum.textContent = '';
+                leftPage.className = 'page-content';
             }
 
             if (rightIndex >= 0 && rightIndex < pages.length) {
                 rightPage.innerHTML = pages[rightIndex];
                 rightPageNum.textContent = rightIndex + 1;
+                
+                // Check if this page has chapter-start class and apply it to the page content
+                if (pages[rightIndex].includes('class="chapter-start"')) {
+                    rightPage.className = 'page-content chapter-start';
+                } else {
+                    rightPage.className = 'page-content';
+                }
             } else {
                 rightPage.innerHTML = '';
                 rightPageNum.textContent = '';
+                rightPage.className = 'page-content';
             }
 
             document.getElementById('prevBtn').disabled = currentPage <= 1;
