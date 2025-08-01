@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Book Reader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: radial-gradient(ellipse at center, #3d2817 0%, #1a0e05 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .book-container {
+            perspective: 2000px;
+            width: 90vw;
+            height: 85vh;
+            max-width: 1400px;
+            max-height: 900px;
+            position: relative;
+        }
+
+        .book {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .page {
+            position: absolute;
+            width: 46%;
+            height: 95%;
+            background: linear-gradient(to right, #fdfcf8 0%, #f7f4e9 100%);
+            box-shadow: 
+                0 0 40px rgba(0,0,0,0.3),
+                inset 0 0 30px rgba(0,0,0,0.05);
+            padding: 20px 25px 15px 25px;
+            font-size: 15px;
+            line-height: 1.4;
+            color: #2c1810;
+            overflow: hidden;
+            backface-visibility: hidden;
+        }
+
+        .page-content {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .page-left {
+            left: 4%;
+            border-radius: 20px 5px 5px 20px;
+            background: 
+                linear-gradient(to right, #fdfcf8 0%, #f7f4e9 95%, #e8e2c4 100%);
+            transform: rotateY(0deg);
+            transform-origin: right center;
+            z-index: 2;
+        }
+
+        .page-right {
+            right: 4%;
+            border-radius: 5px 20px 20px 5px;
+            background: 
+                linear-gradient(to left, #fdfcf8 0%, #f7f4e9 95%, #e8e2c4 100%);
+            transform: rotateY(0deg);
+            transform-origin: left center;
+            z-index: 1;
+        }
+
+        /* Page flip animation classes */
+        .page-flip-left {
+            animation: flipLeft 0.8s ease-in-out forwards;
+            z-index: 10;
+        }
+
+        .page-flip-right {
+            animation: flipRight 0.8s ease-in-out forwards;
+            z-index: 10;
+        }
+
+        @keyframes flipLeft {
+            0% {
+                transform: rotateY(0deg);
+                box-shadow: 0 0 40px rgba(0,0,0,0.3);
+            }
+            30% {
+                box-shadow: 0 0 60px rgba(0,0,0,0.5);
+            }
+            100% {
+                transform: rotateY(-180deg);
+                box-shadow: 0 0 40px rgba(0,0,0,0.3);
+            }
+        }
+
+        @keyframes flipRight {
+            0% {
+                transform: rotateY(0deg);
+                box-shadow: 0 0 40px rgba(0,0,0,0.3);
+            }
+            30% {
+                box-shadow: 0 0 60px rgba(0,0,0,0.5);
+            }
+            100% {
+                transform: rotateY(180deg);
+                box-shadow: 0 0 40px rgba(0,0,0,0.3);
+            }
+        }
+
+        .page-number {
+            position: absolute;
+            bottom: 5px;
+            font-size: 10px;
+            color: rgba(139, 111, 71, 0.7);
+            font-style: italic;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .page-left .page-number {
+            left: 25px;
+        }
+
+        .page-right .page-number {
+            right: 25px;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            background: rgba(255,255,255,0.95);
+            padding: 15px 40px;
+            border-radius: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+
+        .controls button {
+            background: linear-gradient(135deg, #8b6f47 0%, #6d5637 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(139, 111, 71, 0.3);
+        }
+
+        .controls button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 111, 71, 0.4);
+        }
+
+        .controls button:disabled {
+            background: linear-gradient(135deg, #ccc 0%, #aaa 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .page-jump {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+        }
+
+        .page-jump input {
+            width: 70px;
+            padding: 10px;
+            border: 2px solid #8b6f47;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .file-input-container {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            z-index: 1000;
+        }
+
+        .file-input-label {
+            background: linear-gradient(135deg, #8b6f47 0%, #6d5637 100%);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            box-shadow: 0 4px 15px rgba(139, 111, 71, 0.3);
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .file-input-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 111, 71, 0.4);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .toc-button {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #8b6f47 0%, #6d5637 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(139, 111, 71, 0.3);
+            transition: all 0.3s;
+        }
+
+        .toc-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 111, 71, 0.4);
+        }
+
+        .toc-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .toc-content {
+            background: linear-gradient(to bottom, #fdfcf8 0%, #f7f4e9 100%);
+            padding: 50px;
+            border-radius: 20px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .toc-content h2 {
+            margin-bottom: 30px;
+            color: #2c1810;
+            font-size: 32px;
+            text-align: center;
+        }
+
+        .toc-content ul {
+            list-style: none;
+        }
+
+        .toc-content li {
+            margin: 15px 0;
+        }
+
+        .toc-content a {
+            color: #8b6f47;
+            text-decoration: none;
+            font-size: 20px;
+            display: block;
+            padding: 10px 15px;
+            transition: all 0.3s;
+            border-radius: 8px;
+        }
+
+        .toc-content a:hover {
+            background: rgba(139, 111, 71, 0.1);
+            transform: translateX(10px);
+        }
+
+        .close-toc {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #8b6f47;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            transition: all 0.3s;
+        }
+
+        .close-toc:hover {
+            transform: rotate(90deg);
+        }
+
+        /* Typography from markdown */
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 8px;
+            color: #2c1810;
+            font-weight: bold;
+        }
+
+        h2 {
+            font-size: 18px;
+            margin-top: 6px;
+            margin-bottom: 4px;
+            color: #2c1810;
+            font-weight: bold;
+        }
+
+        h3 {
+            font-size: 16px;
+            margin-top: 4px;
+            margin-bottom: 3px;
+            color: #2c1810;
+            font-weight: bold;
+        }
+
+        p {
+            margin-bottom: 4px;
+            text-align: justify;
+            text-indent: 1.2em;
+        }
+
+        p:first-of-type {
+            text-indent: 0;
+        }
+
+        em {
+            font-style: italic;
+            color: #6d5637;
+        }
+
+        strong {
+            font-weight: bold;
+            color: #4a3a28;
+        }
+
+        /* Book spine effect */
+        .book-spine {
+            position: absolute;
+            left: 50%;
+            top: 2.5%;
+            width: 40px;
+            height: 95%;
+            background: linear-gradient(to right, #4a3a28 0%, #6d5637 50%, #4a3a28 100%);
+            transform: translateX(-50%);
+            border-radius: 5px;
+            box-shadow: 
+                inset 0 0 20px rgba(0,0,0,0.5),
+                0 0 30px rgba(0,0,0,0.3);
+            z-index: 0;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #8b6f47;
+            font-size: 24px;
+            z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            .book-container {
+                width: 95vw;
+                height: 80vh;
+            }
+            
+            .page {
+                font-size: 14px;
+                padding: 15px 15px 10px 15px;
+                line-height: 1.5;
+            }
+            
+            .controls {
+                padding: 10px 20px;
+                gap: 15px;
+            }
+            
+            .controls button {
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+            
+            .page-jump input {
+                width: 50px;
+                font-size: 14px;
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+</head>
+<body>
+    <div class="file-input-container">
+        <label for="fileInput" class="file-input-label">Load Markdown File</label>
+        <input type="file" id="fileInput" accept=".md,.markdown" onchange="loadMarkdownFile(event)">
+    </div>
+    
+    <button class="toc-button" onclick="showTOC()">Table of Contents</button>
+    
+    <div class="loading" id="loading" style="display: none;">Loading book...</div>
+    
+    <div class="book-container">
+        <div class="book">
+            <div class="book-spine"></div>
+            <div class="page page-left" id="leftPage">
+                <div class="page-content" id="leftContent"></div>
+                <div class="page-number" id="leftPageNumber"></div>
+            </div>
+            <div class="page page-right" id="rightPage">
+                <div class="page-content" id="rightContent"></div>
+                <div class="page-number" id="rightPageNumber"></div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button onclick="previousPage()" id="prevBtn">← Previous</button>
+            <div class="page-jump">
+                <label>Page:</label>
+                <input type="number" id="pageInput" min="1" onchange="jumpToPage()">
+                <span id="totalPages"></span>
+            </div>
+            <button onclick="nextPage()" id="nextBtn">Next →</button>
+        </div>
+    </div>
+    
+    <div class="toc-overlay" id="tocOverlay" onclick="hideTOC(event)">
+        <div class="toc-content" onclick="event.stopPropagation()">
+            <button class="close-toc" onclick="hideTOC()">×</button>
+            <h2>Table of Contents</h2>
+            <ul id="tocList"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentPage = 1;
+        let pages = [];
+        let chapterStartPages = {};
+        let isFlipping = false;
+        let bookTitle = "Virtual Book";
+
+        // Load markdown file
+        async function loadMarkdownFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('loading').style.display = 'block';
+                const text = await file.text();
+                processMarkdown(text);
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Process markdown content
+        function processMarkdown(markdown) {
+            // Parse markdown to HTML
+            const html = marked.parse(markdown);
+            
+            // Extract title (first H1)
+            const titleMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/);
+            if (titleMatch) {
+                bookTitle = titleMatch[1];
+            }
+
+            // Create a temporary container to parse HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+
+            // Paginate content
+            paginateContent(tempDiv);
+
+            // Update UI
+            updateUI();
+            displayPages();
+        }
+
+        // Smart pagination to fit content perfectly on each page
+        function paginateContent(container) {
+            pages = [];
+            chapterStartPages = {};
+            
+            const elements = Array.from(container.children);
+            const pageHeight = calculatePageHeight();
+            
+            let currentPageElements = [];
+            let currentHeight = 0;
+            let currentChapter = null;
+
+            // Create a hidden measuring div
+            const measuringDiv = document.createElement('div');
+            measuringDiv.style.cssText = `
+                position: absolute;
+                visibility: hidden;
+                width: ${document.querySelector('.page').offsetWidth - 50}px;
+                padding: 20px 25px 15px 25px;
+                font-size: 15px;
+                line-height: 1.4;
+                font-family: Georgia, serif;
+            `;
+            document.body.appendChild(measuringDiv);
+
+            elements.forEach((element, index) => {
+                // Track chapter starts
+                if (element.tagName === 'H1' || element.tagName === 'H2' || element.tagName === 'H3') {
+                    const chapterTitle = element.textContent;
+                    if (!chapterStartPages[chapterTitle]) {
+                        chapterStartPages[chapterTitle] = pages.length;
+                        currentChapter = chapterTitle;
+                    }
+                }
+
+                // Measure element height
+                measuringDiv.innerHTML = '';
+                measuringDiv.appendChild(element.cloneNode(true));
+                const elementHeight = measuringDiv.offsetHeight;
+
+                // Check if adding this element would exceed page height - EXTREMELY aggressive
+                if (currentHeight + elementHeight > pageHeight * 1.4 && currentPageElements.length > 0) {
+                    // Save current page
+                    console.log(`Page ${pages.length + 1}: Used ${currentHeight}px of ${pageHeight}px (${Math.round(currentHeight/pageHeight*100)}%)`);
+                    pages.push(createPageHTML(currentPageElements));
+                    currentPageElements = [];
+                    currentHeight = 0;
+                }
+
+                // Special handling for large elements that don't fit on a single page
+                if (elementHeight > pageHeight) {
+                    // Split large paragraphs
+                    if (element.tagName === 'P') {
+                        const words = element.innerHTML.split(' ');
+                        let tempP = document.createElement('p');
+                        let tempHeight = 0;
+
+                        words.forEach((word, i) => {
+                            tempP.innerHTML += word + ' ';
+                            measuringDiv.innerHTML = tempP.outerHTML;
+                            const newHeight = measuringDiv.offsetHeight;
+
+                            if (newHeight > pageHeight) {
+                                // Save current paragraph fragment
+                                if (currentPageElements.length > 0 || tempP.innerHTML.trim()) {
+                                    const fragment = document.createElement('p');
+                                    fragment.innerHTML = tempP.innerHTML.trim();
+                                    currentPageElements.push(fragment);
+                                    pages.push(createPageHTML(currentPageElements));
+                                }
+                                
+                                // Start new page with remaining text
+                                currentPageElements = [];
+                                tempP = document.createElement('p');
+                                tempP.innerHTML = word + ' ';
+                                currentHeight = measuringDiv.offsetHeight;
+                            }
+                        });
+
+                        // Add remaining text
+                        if (tempP.innerHTML.trim()) {
+                            currentPageElements.push(tempP);
+                            currentHeight += measuringDiv.offsetHeight;
+                        }
+                    } else {
+                        // For headers or other elements, just put them on their own page
+                        if (currentPageElements.length > 0) {
+                            pages.push(createPageHTML(currentPageElements));
+                            currentPageElements = [];
+                        }
+                        currentPageElements.push(element.cloneNode(true));
+                        pages.push(createPageHTML(currentPageElements));
+                        currentPageElements = [];
+                        currentHeight = 0;
+                    }
+                } else {
+                    // Normal case - add element to current page
+                    currentPageElements.push(element.cloneNode(true));
+                    currentHeight += elementHeight;
+                }
+            });
+
+            // Don't forget the last page
+            if (currentPageElements.length > 0) {
+                pages.push(createPageHTML(currentPageElements));
+            }
+
+            // Ensure even number of pages
+            if (pages.length % 2 !== 0) {
+                pages.push('<div style="text-align: center; margin-top: 200px; color: #8b6f47;"><em>~ End ~</em></div>');
+            }
+
+            // Clean up
+            document.body.removeChild(measuringDiv);
+        }
+
+        function calculatePageHeight() {
+            const page = document.querySelector('.page');
+            const styles = window.getComputedStyle(page);
+            const paddingTop = parseInt(styles.paddingTop);
+            const paddingBottom = parseInt(styles.paddingBottom);
+            const pageNumberHeight = 0; // No space reserved for page number
+            const availableHeight = page.offsetHeight - paddingTop - paddingBottom - pageNumberHeight;
+            
+            // Debug output
+            console.log('Page calculations:', {
+                totalHeight: page.offsetHeight,
+                paddingTop,
+                paddingBottom,
+                pageNumberHeight,
+                availableHeight
+            });
+            
+            return availableHeight;
+        }
+
+        function createPageHTML(elements) {
+            const div = document.createElement('div');
+            elements.forEach(el => div.appendChild(el));
+            return div.innerHTML;
+        }
+
+        function updateUI() {
+            document.getElementById('totalPages').textContent = `/ ${pages.length}`;
+            document.getElementById('pageInput').max = pages.length;
+            document.getElementById('pageInput').value = 1;
+            generateTOC();
+        }
+
+        function displayPages() {
+            const leftPage = document.getElementById('leftContent');
+            const rightPage = document.getElementById('rightContent');
+            const leftPageNum = document.getElementById('leftPageNumber');
+            const rightPageNum = document.getElementById('rightPageNumber');
+
+            const leftIndex = currentPage - 1;
+            const rightIndex = currentPage;
+
+            if (leftIndex >= 0 && leftIndex < pages.length) {
+                leftPage.innerHTML = pages[leftIndex];
+                leftPageNum.textContent = leftIndex + 1;
+            } else {
+                leftPage.innerHTML = '';
+                leftPageNum.textContent = '';
+            }
+
+            if (rightIndex >= 0 && rightIndex < pages.length) {
+                rightPage.innerHTML = pages[rightIndex];
+                rightPageNum.textContent = rightIndex + 1;
+            } else {
+                rightPage.innerHTML = '';
+                rightPageNum.textContent = '';
+            }
+
+            document.getElementById('prevBtn').disabled = currentPage <= 1;
+            document.getElementById('nextBtn').disabled = currentPage >= pages.length;
+            document.getElementById('pageInput').value = currentPage;
+        }
+
+        function animatePageFlip(direction) {
+            if (isFlipping) return;
+            isFlipping = true;
+
+            const leftPage = document.getElementById('leftPage');
+            const rightPage = document.getElementById('rightPage');
+
+            if (direction === 'next') {
+                rightPage.classList.add('page-flip-left');
+                setTimeout(() => {
+                    currentPage += 2;
+                    if (currentPage > pages.length) currentPage = pages.length;
+                    displayPages();
+                    rightPage.classList.remove('page-flip-left');
+                    isFlipping = false;
+                }, 400);
+            } else {
+                // For previous page, we need to update content first, then animate
+                currentPage -= 2;
+                if (currentPage < 1) currentPage = 1;
+                displayPages();
+                
+                // Start the left page from behind (180deg) and flip to front (0deg)
+                leftPage.style.transform = 'rotateY(180deg)';
+                leftPage.style.zIndex = '10';
+                
+                // Use requestAnimationFrame to ensure the transform is applied before animation
+                requestAnimationFrame(() => {
+                    leftPage.classList.add('page-flip-right');
+                    
+                    setTimeout(() => {
+                        leftPage.classList.remove('page-flip-right');
+                        leftPage.style.transform = '';
+                        leftPage.style.zIndex = '';
+                        isFlipping = false;
+                    }, 800);
+                });
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < pages.length && !isFlipping) {
+                animatePageFlip('next');
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1 && !isFlipping) {
+                animatePageFlip('prev');
+            }
+        }
+
+        function jumpToPage() {
+            const input = document.getElementById('pageInput');
+            let page = parseInt(input.value);
+            
+            if (page >= 1 && page <= pages.length) {
+                currentPage = page % 2 === 0 ? page : page;
+                displayPages();
+            } else {
+                input.value = currentPage;
+            }
+        }
+
+        function generateTOC() {
+            const tocList = document.getElementById('tocList');
+            tocList.innerHTML = '';
+
+            Object.entries(chapterStartPages).forEach(([chapter, pageIndex]) => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = '#';
+                a.textContent = chapter;
+                a.onclick = (e) => {
+                    e.preventDefault();
+                    currentPage = pageIndex + 1;
+                    if (currentPage % 2 === 0) currentPage--;
+                    displayPages();
+                    hideTOC();
+                };
+                li.appendChild(a);
+                tocList.appendChild(li);
+            });
+        }
+
+        function showTOC() {
+            document.getElementById('tocOverlay').style.display = 'flex';
+        }
+
+        function hideTOC(event) {
+            if (!event || event.target.id === 'tocOverlay') {
+                document.getElementById('tocOverlay').style.display = 'none';
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextPage();
+            if (e.key === 'ArrowLeft') previousPage();
+        });
+
+        // Initialize with sample content
+        window.onload = function() {
+            const sampleMarkdown = `# Welcome to Your Virtual Book
+
+## Getting Started
+
+Click the "Load Markdown File" button in the top left to load your own markdown file. The book will automatically format and paginate your content to fit perfectly on each page. The pages are now optimized to display more content while still ensuring no scrolling is needed.
+
+### Features
+
+- **No scrolling needed** - Content is automatically paginated to fit each page perfectly
+- **Optimized content density** - Pages are filled with more text for efficient reading
+- **Beautiful typography** - Your markdown is rendered with elegant book-style formatting
+- **Smart pagination** - Long paragraphs are intelligently split across pages
+- **Chapter navigation** - Use the Table of Contents to jump to any chapter
+- **Page flipping animations** - Smooth 3D animations when turning pages
+
+### Markdown Support
+
+The book supports standard markdown formatting:
+
+- Headers (# ## ###) for chapters and sections
+- **Bold text** for emphasis
+- *Italic text* for subtle emphasis
+- Paragraphs with automatic indentation
+- Lists and other markdown elements
+
+Simply save your content as a .md file and load it into the book. The virtual book will handle all the formatting and pagination automatically.
+
+The pagination algorithm has been optimized to pack more content onto each page while maintaining readability. Font sizes, line heights, and margins have been carefully adjusted to maximize the amount of text displayed without compromising the elegant book aesthetic.
+
+### Usage Instructions
+
+1. Save your markdown content in a .md file
+2. Click "Load Markdown File" button
+3. Select your file
+4. Enjoy reading your beautifully formatted book
+
+The book will automatically detect chapters from your headers and create a navigable table of contents. Use the arrow keys or click the navigation buttons to flip through pages with smooth animations.`;
+
+            processMarkdown(sampleMarkdown);
+        };
+    </script>
+</body>
+</html>

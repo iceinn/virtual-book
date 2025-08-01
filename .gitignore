@@ -1,0 +1,25 @@
+# Development artifacts and temporary files
+temp/
+.temp/
+*.temp.*
+*-test-*.md
+*-test-*.js
+test-script.*
+*-checklist.md
+*-report.md
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
